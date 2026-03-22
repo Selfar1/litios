@@ -18,8 +18,8 @@ RUN mkdir -p /app/data-defaults && cp /app/data/prompts.json /app/data-defaults/
 # Create data directory (will be replaced by Railway volume)
 RUN mkdir -p /app/data
 
-# Fix line endings (GitHub web editor adds CRLF) and make executable
-RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8080
 ENV PORT=8080
