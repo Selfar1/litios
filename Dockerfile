@@ -22,4 +22,4 @@ EXPOSE 8080
 ENV PORT=8080
 
 # Start: ensure prompts.json exists in volume, then run gunicorn
-CMD bash -c 'if [ ! -f /app/data/prompts.json ]; then cp /app/data-defaults/prompts.json /app/data/prompts.json; fi && exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 server:app'
+CMD sh -c "test -f /app/data/prompts.json || cp /app/data-defaults/prompts.json /app/data/prompts.json; exec gunicorn --bind :${PORT} --workers 1 --threads 8 --timeout 0 server:app"
