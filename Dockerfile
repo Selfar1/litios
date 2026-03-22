@@ -18,11 +18,8 @@ RUN mkdir -p /app/data-defaults && cp /app/data/prompts.json /app/data-defaults/
 # Create data directory (will be replaced by Railway volume)
 RUN mkdir -p /app/data
 
-# Fix line endings (GitHub web editor adds CRLF) and make executable
-RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
-
 EXPOSE 8080
 ENV PORT=8080
 
-# Use entrypoint that ensures defaults are copied to volume
-CMD ["/app/entrypoint.sh"]
+# Start: ensure prompts.json exists in volume, then run gunicorn
+CMD bash -c 'if [ ! -f /app/data/prompts.json ]; then cp /app/data-defaults/prompts.json /app/data/prompts.json; fi && exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 server:app'
