@@ -1,29 +1,28 @@
 # LITI Open Source - Self-hosted Psycholinguistic HR Analysis Tool
-# Dockerfile for Google Cloud Run or self-hosted deployment
-# Uses SQLite for persistent storage
+# Optimized for Railway deployment with persistent volume
 
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
 # Copy requirements first for better caching
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY . .
 
-# Create data directory for SQLite database
+# Backup default data (prompts.json) so it survives volume mount
+RUN mkdir -p /app/data-defaults && cp /app/data/prompts.json /app/data-defaults/prompts.json
+
+# Create data directory (will be replaced by Railway volume)
 RUN mkdir -p /app/data
 
-# Expose port (Cloud Run uses PORT env variable)
-EXPOSE 8080
+# Fix line endings (GitHub web editor adds CRLF) and make executable
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-# Set default PORT if not provided
+EXPOSE 8080
 ENV PORT=8080
 
-# Run the application with gunicorn for production
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 server:app
+# Use entrypoint that ensures defaults are copied to volume
+CMD ["/app/entrypoint.sh"]
