@@ -14,6 +14,7 @@ app = Flask(__name__, static_folder='.')
 DATABASE = os.path.join(os.path.dirname(__file__), 'data', 'liti.db')
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEFAULTS_FILE = os.path.join(DATA_DIR, 'prompts.json')
+DEFAULTS_BACKUP = os.path.join(os.path.dirname(__file__), 'data-defaults', 'prompts.json')
 
 def get_db():
     """Get database connection for current request"""
@@ -67,7 +68,13 @@ def init_db():
         load_defaults()
 
 def load_defaults():
-    """Load default data from prompts.json"""
+    """Load default data from prompts.json (with fallback to backup location)"""
+    # When Railway mounts a volume at /app/data, prompts.json disappears.
+    # Copy it from the backup location baked into the Docker image.
+    if not os.path.exists(DEFAULTS_FILE) and os.path.exists(DEFAULTS_BACKUP):
+        import shutil
+        shutil.copy2(DEFAULTS_BACKUP, DEFAULTS_FILE)
+
     try:
         with open(DEFAULTS_FILE, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
